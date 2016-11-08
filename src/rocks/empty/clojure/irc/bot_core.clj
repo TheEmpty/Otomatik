@@ -23,7 +23,6 @@
 (def irc-privmessage-regex #"^(.+?) :(.+?)$")
 
 (defn irc-command
-  "Sends an IRC command to the given writer, with the given arguments"
   [writer, & args]
   (.write writer (str (clojure.string/join " " args) "\r\n"))
   (.flush writer))
@@ -45,11 +44,6 @@
   (def results (re-find matcher))
   {:nickname (nth results 1) :realname (nth results 2) :host (nth results 3)})
 
-; TODO: this is really just dealing with the argument list stuff
-(defn irc-privmsg
-  [writer, channel, message]
-  (irc-command writer "PRIVMSG" channel (str ":" message)))
-
 ; TODO: pass in server and port.
 (defn irc-connect
   "Returns a connection object to the IRC server"
@@ -70,7 +64,7 @@
   )
 
 (defn echo [connection, channel, user, message]
-  (irc-privmsg (:writer connection) channel (str (:nickname user) " did you seriously just say " message)))
+  (irc-command (:writer connection) "PRIVMSG" channel (str ":" (:nickname user) " did you seriously just say " message)))
 
 (defmulti handle "Handles IRC commands based on the given IRC command" (fn [packet] (:command (:message packet))))
 
@@ -84,6 +78,7 @@
 (defmethod handle "PRIVMSG" [packet]
   (def chan (nth (:params (:message packet)) 0))
   (def msg (nth (:params (:message packet)) 1))
+  ; (echo (:connection packet) chan (:prefix (:message packet)) msg)
 
   (println (str "Recieved on " chan " from " (:nickname (:prefix (:message packet))) ": " msg)))
 
