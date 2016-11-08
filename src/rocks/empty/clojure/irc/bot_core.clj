@@ -44,10 +44,9 @@
   (def results (re-find matcher))
   {:nickname (nth results 1) :realname (nth results 2) :host (nth results 3)})
 
-; TODO: pass in server and port.
 (defn irc-connect
   "Returns a connection object to the IRC server"
-  [nickname, realname, channel]
+  [server, power, nickname, realname, channel]
   
   (def socket (new Socket server port))
   (def outputStream (new OutputStreamWriter (.getOutputStream socket)))
@@ -63,9 +62,6 @@
   {:reader inputStream :writer outputStream}
   )
 
-(defn echo [connection, channel, user, message]
-  (irc-command (:writer connection) "PRIVMSG" channel (str ":" (:nickname user) " did you seriously just say " message)))
-
 (defmulti handle "Handles IRC commands based on the given IRC command" (fn [packet] (:command (:message packet))))
 
 (defmethod handle "PING" [packet]
@@ -78,7 +74,6 @@
 (defmethod handle "PRIVMSG" [packet]
   (def chan (nth (:params (:message packet)) 0))
   (def msg (nth (:params (:message packet)) 1))
-  ; (echo (:connection packet) chan (:prefix (:message packet)) msg)
 
   (println (str "Recieved on " chan " from " (:nickname (:prefix (:message packet))) ": " msg)))
 
@@ -128,6 +123,6 @@
 
 (defn -main
   [& args]
-  (def connection (irc-connect nickname login channel))
+  (def connection (irc-connect server port nickname login channel))
   (irc-loop connection))
 
