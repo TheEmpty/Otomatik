@@ -98,9 +98,21 @@
   (.println System/err "Nickname already in use.")
   (System/exit -1))
 
+; Helper for (idea for) example plugin.
+(defn respondTimeZone [connection, chan, zone]
+  (irc-command (:writer connection) "PRIVMSG" chan
+               (str ":" zone " => "
+                    (.toString (java.time.LocalDateTime/now (java.time.ZoneId/of zone))))))
+
 (defmethod handle "PRIVMSG" [packet]
   (def chan (nth (:params (:message packet)) 0))
   (def msg (nth (:params (:message packet)) 1))
+
+  ; Idea for example plugin
+  (when (= msg "!time")
+    (respondTimeZone (:connection packet) chan "America/Los_Angeles")
+    (respondTimeZone (:connection packet) chan "Europe/London")
+    (respondTimeZone (:connection packet) chan "Japan"))
 
   (println (str "Recieved on " chan " from " (:nickname (:prefix (:message packet))) ": " msg)))
 
