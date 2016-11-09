@@ -18,19 +18,21 @@
       (= -1 (.indexOf line "376")))))
 
 (defn connect
-  "Returns a connection object to the IRC server"
-  [server, port, nickname, realname, channel]
+  "Returns a connection map to the IRC server"
+  [options]
 
+  (def server (:server options))
+  (def port (:port options))
   (def socket (new Socket (str server) (long port)))
   (def outputStream (new OutputStreamWriter (.getOutputStream socket)))
   (def outputBuffer (new BufferedWriter outputStream))
   (def inputStream (new InputStreamReader (.getInputStream socket)))
   (def inputBuffer (new BufferedReader inputStream))
 
-  (irc-commands/irc-command outputBuffer "NICK" nickname)
-  (irc-commands/irc-command outputBuffer "USER" realname "8" "*" ":" "Empty Bot")
+  (irc-commands/irc-command outputBuffer "NICK" (:nickname options))
+  (irc-commands/irc-command outputBuffer "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks")
   (irc-read-motd inputBuffer)
-  (irc-commands/irc-command outputBuffer "JOIN" channel)
+  (irc-commands/irc-command outputBuffer "JOIN" (:channel options))
 
   {:reader inputStream :writer outputStream :socket socket})
 
@@ -47,14 +49,5 @@
 
 (defn bot
   [options]
+  (main-loop (connect options)))
 
-  (def connection
-    (connect
-             (:server options)
-             (:port options)
-             (:nickname options)
-             (:realname options)
-             (:channel options)
-             )) ; TODO: connection should probably just take options also needs validation
-
-  (main-loop connection))

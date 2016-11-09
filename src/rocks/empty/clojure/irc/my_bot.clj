@@ -1,4 +1,3 @@
-; Just testing some ideas
 (ns rocks.empty.clojure.irc.test-bot
   (:require [rocks.empty.clojure.irc.irc-client :as irc-client]))
 
