@@ -18,6 +18,13 @@ a very basic bot that just reacts to pings.
   -c, --channel CHANNEL          IRC Channel to join
 ```
 
+## TODO
+
+* Some tests
+* Plugin structure
+* Improve logging
+* Make this package a library, rather than client (`lein run` etc).
+
 ## License
 
 Copyright © 2016 Mohammad "Empty" El-Abid
