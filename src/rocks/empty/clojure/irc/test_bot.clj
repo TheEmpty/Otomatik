@@ -1,4 +1,5 @@
 (ns rocks.empty.clojure.irc.test-bot
+  (:gen-class)
   (:require [rocks.empty.clojure.irc.irc-client :as irc-client]))
 
 (defn my-plugin
@@ -19,6 +20,8 @@
   :plugins [ my-plugin ]
   })
 
-(irc-client/bot options)
-(println "Bye!")
+(defn -main
+  [& args]
+  (irc-client/bot options)
+  (println "Bye!"))
 
