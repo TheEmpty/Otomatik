@@ -37,17 +37,20 @@
   {:reader inputStream :writer outputStream :socket socket})
 
 (defn main-loop
-  [connection]
+  [connection, plugins]
   (while (not (.isClosed (:socket connection)))
     (def line (.readLine inputBuffer))
     (def message (irc-commands/parse-message line))
-    (irc-handlers/handle {
-             :message message
-             :raw line
-             :connection connection
-             })))
+    (def packet {
+                 :message message
+                 :raw line
+                 :connection connection})
+    (irc-handlers/handle packet)
+    ; TODO: threading, also sand-boxing (try/catch) funcs
+    (doseq [plugin plugins] ((:function plugin) packet))))
+
 
 (defn bot
   [options]
-  (main-loop (connect options)))
+  (main-loop (connect options) (:plugins options)))
 
