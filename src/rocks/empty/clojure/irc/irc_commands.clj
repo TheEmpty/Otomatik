@@ -25,9 +25,11 @@
       (def trailing-split (clojure.string/split trimmed #":" 2))
       (def bare (clojure.string/split (nth trailing-split 0) #" "))
 
-      (if (= 2 (count trailing-split))
-        (concat bare (list (nth trailing-split 1)))
-        bare))))
+      (if (= 1 (count trailing-split))
+        bare
+        (if (= "" (nth trailing-split 0))
+          (list (nth trailing-split 1))
+          (concat bare (list (nth trailing-split 1))))))))
 
 (defn parse-prefix [prefix]
   "Parses the prefix part of an IRC message"

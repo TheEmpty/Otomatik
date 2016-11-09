@@ -20,6 +20,7 @@ a very basic bot that just reacts to pings.
 
 ## TODO
 
+* Write an example of trapping control+C and quiting.
 * Some tests
 * Plugin structure
 * Improve logging
