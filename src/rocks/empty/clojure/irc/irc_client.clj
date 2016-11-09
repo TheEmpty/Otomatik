@@ -20,8 +20,8 @@
 (defn connect
   "Returns a connection object to the IRC server"
   [server, port, nickname, realname, channel]
-  
-  (def socket (new Socket server port))
+
+  (def socket (new Socket (str server) (long port)))
   (def outputStream (new OutputStreamWriter (.getOutputStream socket)))
   (def outputBuffer (new BufferedWriter outputStream))
   (def inputStream (new InputStreamReader (.getInputStream socket)))
@@ -38,11 +38,23 @@
   [connection]
   (while (not (.isClosed (:socket connection)))
     (def line (.readLine inputBuffer))
-    (println (str ">>> " line))
     (def message (irc-commands/parse-message line))
-    (println (str "  > " message))
     (irc-handlers/handle {
              :message message
              :raw line
              :connection connection
              })))
+
+(defn bot
+  [options]
+
+  (def connection
+    (connect
+             (:server options)
+             (:port options)
+             (:nickname options)
+             (:realname options)
+             (:channel options)
+             )) ; TODO: connection should probably just take options also needs validation
+
+  (main-loop connection))
