@@ -49,7 +49,6 @@
     ; TODO: threading, also sand-boxing (try/catch) funcs
     (doseq [plugin plugins] ((:function plugin) packet))))
 
-
 (defn bot
   [options]
   (main-loop (connect options) (:plugins options)))
