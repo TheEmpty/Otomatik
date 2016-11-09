@@ -13,7 +13,9 @@
 
 (defmethod handle "PING" [packet]
   "This is sent by the IRC server to verify the client is still up and running."
-  (irc-commands/irc-command (:writer (:connection packet)) "PONG"))
+  (def params (:params packet))
+  (def last-param (nth params (- 1 (count params))))
+  (irc-commands/irc-command (:writer (:connection packet)) "PONG " last-param))
 
 (defmethod handle "ERROR" [packet]
   "This is sent by the server indicating a fatal issue."
