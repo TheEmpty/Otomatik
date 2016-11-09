@@ -1,6 +1,7 @@
 ; Written by Mohammad El-Abid
 ; First clojure program, so forgive me if it's messy or anti-pattern.
 ; Rules: https://tools.ietf.org/html/rfc2812#section-2.3.1
+; TODO: break file up
 
 (ns rocks.empty.clojure.irc.bot-core
     (:gen-class)
@@ -9,18 +10,8 @@
     (:import java.io.BufferedReader)
     (:import java.io.InputStreamReader)
     (:import java.io.OutputStreamWriter)
+    (:require [clojure.tools.cli :refer [parse-opts]])
   )
-
-; TODO: config/arguments
-(def server "irc.freenode.net")
-(def port 6667)
-(def nickname "Empty-testbot")
-(def login "Empty-testbot")
-(def channel "#emptytest")
-
-; Regex used - TODO: bring the other one up here, also privmessage doesn't need to exist anymore
-(def irc-username-regex #"^:(.+?)!~(.+?)@(.+?)$")
-(def irc-privmessage-regex #"^(.+?) :(.+?)$")
 
 (defn irc-command
   [writer, & args]
@@ -40,13 +31,13 @@
 (defn parse-user
   "Returns the nickname, realname, and host of a given IRC user string"
   [line]
-  (def matcher (re-matcher irc-username-regex line))
+  (def matcher (re-matcher #"^:(.+?)!~(.+?)@(.+?)$" line))
   (def results (re-find matcher))
   {:nickname (nth results 1) :realname (nth results 2) :host (nth results 3)})
 
 (defn irc-connect
   "Returns a connection object to the IRC server"
-  [server, power, nickname, realname, channel]
+  [server, port, nickname, realname, channel]
   
   (def socket (new Socket server port))
   (def outputStream (new OutputStreamWriter (.getOutputStream socket)))
@@ -92,7 +83,6 @@
         (concat bare (list (nth trailing-split 1)))
         bare))))
 
-; TODO: this isn't accurate - needs to handle name[[!user]@host]
 (defn parse-prefix [prefix]
   "Parses the prefix part of an IRC message"
   (if (= prefix nil) nil
@@ -121,8 +111,39 @@
              :connection connection
              })))
 
+; Non-IRC stuff / Driver stuff
+
+(def required-options #{:port :server :nick :realname :channel})
+
+(def cli-options
+  [["-p" "--port PORT" "IRC Server Port Number"
+   :default 6667
+   :parse-fn #(Integer/parseInt %)]
+  ["-s" "--server SERVER" "IRC Server hostname"]
+  ["-n" "--nick NICKNAME" "IRC Bot's nickname"]
+  ["-r" "--realname REALNAME" "IRC Bot's realname"]
+  ["-c" "--channel CHANNEL" "IRC Channel to join"]])
+
 (defn -main
   [& args]
+  (def opts (parse-opts args cli-options))
+  (def options (:options opts))
+
+  (when (not (= nil (:errors opts)))
+    (println (:errors opts))
+    (println (:summary opts))
+    (System/exit -1))
+
+  (when (not-every? options required-options)
+    (println (str "Failed to find required arguments: " required-options " in " options))
+    (println (:summary opts))
+    (System/exit -1))
+
+  (def server (:server options))
+  (def nickname (:nick options))
+  (def channel (:channel options))
+  (def login (:realname options))
+  (def port (:port options))
   (def connection (irc-connect server port nickname login channel))
   (irc-loop connection))
 
