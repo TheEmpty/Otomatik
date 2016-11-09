@@ -1,14 +1,9 @@
 ; Rules: https://tools.ietf.org/html/rfc2812#section-2.3.1
 
-(ns rocks.empty.clojure.irc.irc-commands
-    (:import java.net.Socket)
-    (:import java.io.BufferedWriter)
-    (:import java.io.BufferedReader)
-    (:import java.io.InputStreamReader)
-    (:import java.io.OutputStreamWriter)
-  )
+(ns rocks.empty.clojure.irc.irc-commands)
 
-; TOOD: rename, work a bit better with options, prefix, etc.
+; TODO: rename, work a bit better with options, prefix, etc.
+; Maybe move out of this file and into a more client friendly one
 (defn irc-command
   [writer, & args]
   (.write writer (str (clojure.string/join " " args) "\r\n"))
@@ -22,7 +17,6 @@
   (def results (re-find matcher))
   {:nickname (nth results 1) :realname (nth results 2) :host (nth results 3)})
 
-	
 (defn parse-params [params]
   "Parses the parameter part of an IRC message"
   (if (= params nil) nil

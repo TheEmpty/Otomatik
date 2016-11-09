@@ -1,3 +1,5 @@
+; Note: this file will be deprecated and remove as this switches to a library.
+
 (ns rocks.empty.clojure.irc.bot-core
     (:gen-class)
     (:require [clojure.tools.cli :refer [parse-opts]])

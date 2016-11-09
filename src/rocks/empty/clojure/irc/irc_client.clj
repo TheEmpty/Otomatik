@@ -32,11 +32,11 @@
   (irc-read-motd inputBuffer)
   (irc-commands/irc-command outputBuffer "JOIN" channel)
 
-  {:reader inputStream :writer outputStream})
+  {:reader inputStream :writer outputStream :socket socket})
 
 (defn main-loop
   [connection]
-  (while true
+  (while (not (.isClosed (:socket connection)))
     (def line (.readLine inputBuffer))
     (println (str ">>> " line))
     (def message (irc-commands/parse-message line))
