@@ -1,7 +1,7 @@
 (ns rocks.empty.clojure.irc.bot-core
     (:gen-class)
     (:require [clojure.tools.cli :refer [parse-opts]])
-    (:require [rocks.empty.clojure.irc.irc-commands :as irc-commands])
+    (:require [rocks.empty.clojure.irc.irc-client :as irc-client])
   )
 
 (def required-options #{:port :server :nick :realname :channel})
@@ -35,6 +35,6 @@
   (def channel (:channel options))
   (def login (:realname options))
   (def port (:port options))
-  (def connection (irc-commands/connect server port nickname login channel))
-  (irc-commands/main-loop connection))
+  (def connection (irc-client/connect server port nickname login channel))
+  (irc-client/main-loop connection))
 
