@@ -20,10 +20,12 @@ and then you can add
 
 
 ### Writing your own plugins
-Plugins passed to `irc-client/bot` are assumed to be a map with  the key `:author`. They can also define the following keys.
+Plugins passed to `irc-client/bot` are assumed to be a map with the key `:author`
+and additional keys mapped to a function for given cases (see below).
 
 ```clojure
 {
+  :author => "How to get ahold of me."
   :init => (fn [connection]) ; called when the bot connects to the server.
   :handle => (fn [packet]) ; called when a message is recieved from the server.
 }
