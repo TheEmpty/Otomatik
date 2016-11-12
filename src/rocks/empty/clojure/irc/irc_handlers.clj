@@ -31,5 +31,14 @@
   "This is sent by the server before it closes the connection."
   (close-connection packet))
 
+(defmethod handle "NICK" [packet]
+  "This keeps track of the bot's nickname."
+  (let [
+    prev-nick (first (:prefix (:message packet)))
+    new-nick (last (:params (:message packet)))
+    ]
+    (if (= prev-nick (deref (:nickname (:connection packet))))
+      (dosync (ref-set (:nickname (:connection packet)) new-nick)))))
+
 ; NO-OP for unknown commands
 (defmethod handle :default [packet] nil)

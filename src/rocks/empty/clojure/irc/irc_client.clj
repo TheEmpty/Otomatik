@@ -21,13 +21,14 @@
       outputBuffer (new BufferedWriter outputStream)
       inputStream (new InputStreamReader (.getInputStream socket))
       inputBuffer (new BufferedReader inputStream)
+      nickname (ref (:nickname options))
     ]
 
     (irc-commands/irc-command outputBuffer "NICK" (:nickname options))
     (irc-commands/irc-command outputBuffer "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks")
 
     ; Calls init on plugins that define it
-    (let [connection {:reader inputBuffer :writer outputBuffer :socket socket}]
+    (let [connection {:reader inputBuffer :writer outputBuffer :socket socket :nickname nickname}]
       (doseq [plugin (:plugins options)]
         (if (:init plugin)
           (.submit pool (fn [] ((:init plugin) connection)))))
@@ -44,8 +45,8 @@
       ]
       (irc-handlers/handle packet)
       (doseq [plugin plugins]
-      (if (:function plugin)
-      (.submit pool (fn [] ((:function plugin) packet))))))))
+        (if (:function plugin)
+          (.submit pool (fn [] ((:function plugin) packet))))))))
 
 (defn bot
   [options]
@@ -54,5 +55,4 @@
     connection (connect options pool)
     ]
     (main-loop connection (:plugins options) pool)
-    (.shutdown pool)
-    ))
+    (.shutdown pool)))
