@@ -5,11 +5,14 @@
 
 (defn close-connection [packet]
   (.println System/err (str "Closing connection due to " (apply str (:params (:message packet)))))
-  (.close (:reader (:connection packet)))
-  (.close (:writer (:connection packet)))
-  (.close (:socket (:connection packet))))
+  (let [connection (:connection packet)]
+    (locking (:reader connection) (.close (:reader connection)))
+    (locking (:writer connection) (.close (:writer connection)))
+    (locking (:socket connection) (.close (:socket connection)))))
 
-(defmulti handle "Handles IRC commands based on the given IRC command" (fn [packet] (:command (:message packet))))
+(defmulti handle
+  "Handles IRC commands based on the given IRC command"
+  (fn [packet] (:command (:message packet))))
 
 (defmethod handle "PING" [packet]
   "This is sent by the IRC server to verify the client is still up and running."
