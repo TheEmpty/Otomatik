@@ -15,12 +15,8 @@
   [prefix]
   (let [results (re-find (re-matcher #"^:(.+?)(\!.+?)?(@.+?)?$" prefix))]
     (if (and (= nil (nth results 2)) (= nil (nth results 3)))
-      {:server (nth results 1)}
-      {
-        :nickname (nth results 1)
-        :realname (subs (nth results 2) 1)
-        :host (subs (nth results 3) 1)
-      })))
+      [(nth results 1)]
+      [(nth results 1) (subs (nth results 2) 1) (subs (nth results 3) 1)])))
 
 (defn parse-params [params]
   "Parses the parameter part of an IRC message"

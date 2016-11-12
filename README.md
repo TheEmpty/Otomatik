@@ -41,9 +41,9 @@ packet {
 }
 
 message {
-  :prefix  ; the IRC prefix, {:server} or {:nickname :realname :host}.
+  :prefix  ; the IRC prefix, [server] or [nickname realname host]. But note the prefix is optional (will be nil if there is none) and so are realname and host.
   :command ; the IRC command
-  :params  ; parameters to the IRC command.
+  :params  ; parameters to the IRC command. Nil if there were none.
 }
 
 connection { ; NOTE: use (locking obj) whenever you using these!
