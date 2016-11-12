@@ -4,7 +4,7 @@
 	(:require [rocks.empty.clojure.irc.irc-commands :as irc-commands]))
 
 (defn close-connection [packet]
-  (.println System/err (str "Closing connection due to " (apply str (:params (:message packet)))))
+  (.println System/err (str "Closing connection due to " (:raw packet)))
   (let [connection (:connection packet)]
     (locking (:reader connection) (.close (:reader connection)))
     (locking (:writer connection) (.close (:writer connection)))
@@ -16,9 +16,12 @@
 
 (defmethod handle "PING" [packet]
   "This is sent by the IRC server to verify the client is still up and running."
-  (def params (:params packet))
-  (def last-param (nth params (- 1 (count params))))
-  (irc-commands/irc-command (:writer (:connection packet)) "PONG" last-param))
+  (let
+    [
+      params (:params packet)
+      last-param (nth params (- 1 (count params)))
+    ]
+    (irc-commands/irc-command (:writer (:connection packet)) "PONG" last-param)))
 
 (defmethod handle "ERROR" [packet]
   "This is sent by the server indicating a fatal issue."

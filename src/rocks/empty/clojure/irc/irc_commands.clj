@@ -25,11 +25,12 @@
 (defn parse-params [params]
   "Parses the parameter part of an IRC message"
   (if (= params nil) nil
-    (do
-      ; TODO: move over to let
-      (def trimmed (clojure.string/trim params))
-      (def trailing-split (clojure.string/split trimmed #":" 2))
-      (def bare (clojure.string/split (nth trailing-split 0) #" "))
+    (let
+      [
+        trimmed (clojure.string/trim params)
+        trailing-split (clojure.string/split trimmed #":" 2)
+        bare (clojure.string/split (nth trailing-split 0) #" ")
+      ]
 
       (if (= 1 (count trailing-split))
         bare

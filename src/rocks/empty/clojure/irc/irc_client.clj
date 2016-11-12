@@ -18,36 +18,41 @@
   "Returns a connection map to the IRC server"
   [options, pool]
 
-  (def server (:server options))
-  (def port (:port options))
-  (def socket (new Socket (str server) (long port)))
-  (def outputStream (new OutputStreamWriter (.getOutputStream socket)))
-  (def outputBuffer (new BufferedWriter outputStream))
-  (def inputStream (new InputStreamReader (.getInputStream socket)))
-  (def inputBuffer (new BufferedReader inputStream))
+  (let
+    [
+      server (:server options)
+      port (:port options)
+      socket (new Socket (str server) (long port))
+      outputStream (new OutputStreamWriter (.getOutputStream socket))
+      outputBuffer (new BufferedWriter outputStream)
+      inputStream (new InputStreamReader (.getInputStream socket))
+      inputBuffer (new BufferedReader inputStream)
+    ]
 
-  (irc-commands/irc-command outputBuffer "NICK" (:nickname options))
-  (irc-commands/irc-command outputBuffer "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks")
-  (irc-read-motd inputBuffer)
+    (irc-commands/irc-command outputBuffer "NICK" (:nickname options))
+    (irc-commands/irc-command outputBuffer "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks")
+    (irc-read-motd inputBuffer)
 
-  ; Calls init on plugins that define it
-  (let [connection {:reader inputStream :writer outputStream :socket socket}]
-    (doseq [plugin (:plugins options)]
-      (if (:init plugin)
-        (.submit pool (fn [] ((:init plugin) connection)))))
-    connection))
+    ; Calls init on plugins that define it
+    (let [connection {:reader inputBuffer :writer outputBuffer :socket socket}]
+      (doseq [plugin (:plugins options)]
+        (if (:init plugin)
+          (.submit pool (fn [] ((:init plugin) connection)))))
+      connection)))
 
 (defn main-loop
   [connection, plugins, pool]
   (while (not (.isClosed (:socket connection)))
-    (let [line (locking inputBuffer (.readLine inputBuffer))]
-      (let [message (irc-commands/parse-message line)]
-        (let [packet {:message message :raw line :connection connection}]
-          (irc-handlers/handle packet)
-          ; TODO: plugins in some sort of wrapper
-          (doseq [plugin plugins]
-            (if (:function plugin)
-              (.submit pool (fn [] ((:function plugin) packet))))))))))
+    (let [
+      inputBuffer (:reader connection)
+      line (locking inputBuffer (.readLine inputBuffer))
+      message (irc-commands/parse-message line)
+      packet {:message message :raw line :connection connection}
+      ]
+      (irc-handlers/handle packet)
+      (doseq [plugin plugins]
+      (if (:function plugin)
+      (.submit pool (fn [] ((:function plugin) packet))))))))
 
 (defn bot
   [options]
@@ -55,4 +60,6 @@
     pool (java.util.concurrent.Executors/newFixedThreadPool 16)
     connection (connect options pool)
     ]
-    (main-loop connection (:plugins options) pool)))
+    (main-loop connection (:plugins options) pool)
+    (.shutdown pool)
+    ))
