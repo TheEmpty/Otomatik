@@ -50,6 +50,7 @@ connection { ; NOTE: use (locking obj) whenever you using these!
   :reader ; java.io.BufferedReader
   :writer ; java.io.BufferedWritter
   :socket ; java.net.Socket
+  :nickname ; a clojure ref containing the bot's current nickname.
 }
 
 ```
