@@ -12,7 +12,7 @@ For an example client, check out [TheEmpty/Clojure-IRC-Bot](https://github.com/T
 ### Starting your client
 You'll need to `(:require [rocks.empty.clojure.irc.irc-client :as irc-client])` to call
 the entry point for your bot, `(irc-client/bot options)`. For options, you are required
-to give `:namename`, `:realname`, `:server`, `:port`, and a list of `:plugins`.
+to give `:nickname`, `:realname`, `:server`, `:port`, and a list of `:plugins`.
 To make your client join a channel automatically, add
 `(:require [rocks.empty.clojure.irc.default-plugins.channel-joiner :as channel-joiner])`
 and then you can add
@@ -29,22 +29,22 @@ Plugins passed to `irc-client/bot` are assumed to be a map with  the key `:autho
 packet =>
 {
   :raw ; the raw line read from the server.
-    :message
-    :connection
+  :message
+  :connection
 }
 
 message =>
 {
   :prefix  ; the IRC prefix, {:server} or {:nickname :realname :host}.
-    :command ; the IRC command
-    :params  ; parameters to the IRC command.
+  :command ; the IRC command
+  :params  ; parameters to the IRC command.
 }
 
 connection => ; NOTE: use (locking obj) whenever you using these!
 {
   :reader ; java.io.BufferedReader
-    :writer ; java.io.BufferedWritter
-    :socket ; java.net.Socket
+  :writer ; java.io.BufferedWritter
+  :socket ; java.net.Socket
 }
 
 ```
