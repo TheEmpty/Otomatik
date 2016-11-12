@@ -1,6 +1,6 @@
 # Clojure IRC Bot
 
-An IRC bot in Clojure! Designed to be modular and plugin-based.
+An IRC bot in Clojure. Designed to be modular and plugin-based.
 
 ## Usage
 
@@ -27,7 +27,7 @@ and additional keys mapped to a function for given cases (see below).
 {
   :author "How to get ahold of me."
   :init (fn [connection] (my-init connection)) ; called when the bot connects to the server.
-  :handle (fn [packet] (my-handle packet)) ; called when a message is recieved from the server.
+  :function (fn [packet] (my-handle packet)) ; called when a message is recieved from the server.
 }
 ```
 
