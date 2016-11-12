@@ -6,8 +6,9 @@
 ; Maybe move out of this file and into a more client friendly one
 (defn irc-command
   [writer, & args]
-  (.write writer (str (clojure.string/join " " args) "\r\n"))
-  (.flush writer))
+  (locking writer
+    (.write writer (str (clojure.string/join " " args) "\r\n"))
+    (.flush writer)))
 
 ; TODO: rename this or move into parse-prefix
 (defn parse-user
@@ -23,7 +24,7 @@
   "Parses the parameter part of an IRC message"
   (if (= params nil) nil
     (do
-      ; let
+      ; TODO: move over to let
       (def trimmed (clojure.string/trim params))
       (def trailing-split (clojure.string/split trimmed #":" 2))
       (def bare (clojure.string/split (nth trailing-split 0) #" "))
