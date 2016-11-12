@@ -1,4 +1,4 @@
-# Clojure IRC Bot
+# IRC Bot
 
 An IRC bot in Clojure. Designed to be modular and plugin-based.
 
