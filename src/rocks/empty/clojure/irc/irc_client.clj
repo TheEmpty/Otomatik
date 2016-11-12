@@ -16,7 +16,7 @@
 
 (defn connect
   "Returns a connection map to the IRC server"
-  [options]
+  [options, pool]
 
   (def server (:server options))
   (def port (:port options))
@@ -32,11 +32,13 @@
 
   ; Calls init on plugins that define it
   (let [connection {:reader inputStream :writer outputStream :socket socket}]
-    (doseq [plugin (:plugins options)] (if (:init plugin) ((:init plugin) connection)))
+    (doseq [plugin (:plugins options)]
+      (if (:init plugin)
+        (.submit pool (fn [] ((:init plugin) connection)))))
     connection))
 
 (defn main-loop
-  [connection, plugins]
+  [connection, plugins, pool]
   (while (not (.isClosed (:socket connection)))
     (let [line (locking inputBuffer (.readLine inputBuffer))]
       (let [message (irc-commands/parse-message line)]
@@ -44,9 +46,13 @@
           (irc-handlers/handle packet)
           ; TODO: plugins in some sort of wrapper
           (doseq [plugin plugins]
-            (if (:function plugin) ((:function plugin) packet))))))))
+            (if (:function plugin)
+              (.submit pool (fn [] ((:function plugin) packet))))))))))
 
 (defn bot
   [options]
-  (main-loop (connect options) (:plugins options)))
-
+  (let [
+    pool (java.util.concurrent.Executors/newFixedThreadPool 16)
+    connection (connect options pool)
+    ]
+    (main-loop connection (:plugins options) pool)))
