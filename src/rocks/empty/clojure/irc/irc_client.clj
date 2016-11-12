@@ -8,12 +8,6 @@
     (:require [rocks.empty.clojure.irc.irc-handlers :as irc-handlers])
   )
 
-(defn irc-read-motd
-  "Moves the reader past the Message of the Day"
-  [reader]
-  (while
-    (= -1 (.indexOf (locking reader (.readLine reader)) "376"))))
-
 (defn connect
   "Returns a connection map to the IRC server"
   [options, pool]
@@ -31,7 +25,6 @@
 
     (irc-commands/irc-command outputBuffer "NICK" (:nickname options))
     (irc-commands/irc-command outputBuffer "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks")
-    (irc-read-motd inputBuffer)
 
     ; Calls init on plugins that define it
     (let [connection {:reader inputBuffer :writer outputBuffer :socket socket}]
