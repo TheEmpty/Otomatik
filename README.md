@@ -4,14 +4,16 @@ An IRC bot in Clojure! Designed to be modular and plugin-based.
 
 ## Usage
 
-Still in active development.
+[![Clojars Project](http://clojars.org/irc-bot/latest-version.svg)](http://clojars.org/irc-bot)
 
-## TODO
+For an example client, check out [TheEmpty/Clojure-IRC-Bot](https://github.com/TheEmpty/Clojure-IRC-Bot).
+
+## Future Improvements
 
 * Improve irc-commands.
 * Test suite.
 * Improve logging.
-* Provide example usage.
+* Improve documentation.
 
 ## License
 
