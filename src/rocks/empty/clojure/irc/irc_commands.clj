@@ -10,9 +10,8 @@
     (.write writer (str (clojure.string/join " " args) "\r\n"))
     (.flush writer)))
 
-; TODO: rename this or move into parse-prefix
-(defn parse-user
-  "Returns the nickname, realname, and host of a given IRC user string"
+(defn parse-user-or-server
+  "Returns the nickname, realname, and/or host of a given IRC user string"
   [line]
   (let [results (re-find (re-matcher #"^:(.+?)(\!.+?)?(@.+?)?$" line))]
   ; TODO: drop the ! and @ in results 2 and 3 respectively
@@ -38,13 +37,13 @@
 (defn parse-prefix [prefix]
   "Parses the prefix part of an IRC message"
   (if (= prefix nil) nil
-    (do
-      (parse-user (clojure.string/trim prefix)))))
+    (parse-user-or-server (clojure.string/trim prefix))))
 
 (defn parse-message [line]
-  (def parsed (re-find (re-matcher #"^(:.+? )?(.+?)( .+?)?$" line)))
-  (def prefix (parse-prefix (nth parsed 1)))
-  (def command (nth parsed 2))
-  (def params (parse-params (nth parsed 3)))
-
-  {:prefix prefix :command command :params params})
+  "Parses a raw message from the IRC server."
+  (let [parsed (re-find (re-matcher #"^(:.+? )?(.+?)( .+?)?$" line))]
+    {
+      :prefix (parse-prefix (nth parsed 1))
+      :command (nth parsed 2)
+      :params (parse-params (nth parsed 3))
+    }))
