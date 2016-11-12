@@ -4,18 +4,15 @@
     (:import java.io.BufferedReader)
     (:import java.io.InputStreamReader)
     (:import java.io.OutputStreamWriter)
-	(:require [rocks.empty.clojure.irc.irc-commands :as irc-commands])
-	(:require [rocks.empty.clojure.irc.irc-handlers :as irc-handlers])
+    (:require [rocks.empty.clojure.irc.irc-commands :as irc-commands])
+    (:require [rocks.empty.clojure.irc.irc-handlers :as irc-handlers])
   )
 
-; TODO: once we get plugins, the auto-join can become a plugin. Thus removing this.
 (defn irc-read-motd
   "Moves the reader past the Message of the Day"
   [reader]
   (while
-    (and
-      (def line (.readLine reader))
-      (= -1 (.indexOf line "376")))))
+    (= -1 (.indexOf (locking reader (.readLine reader)) "376"))))
 
 (defn connect
   "Returns a connection map to the IRC server"
@@ -32,22 +29,22 @@
   (irc-commands/irc-command outputBuffer "NICK" (:nickname options))
   (irc-commands/irc-command outputBuffer "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks")
   (irc-read-motd inputBuffer)
-  (irc-commands/irc-command outputBuffer "JOIN" (:channel options))
 
-  {:reader inputStream :writer outputStream :socket socket})
+  ; Calls init on plugins that define it
+  (let [connection {:reader inputStream :writer outputStream :socket socket}]
+    (doseq [plugin (:plugins options)] (if (:init plugin) ((:init plugin) connection)))
+    connection))
 
 (defn main-loop
   [connection, plugins]
   (while (not (.isClosed (:socket connection)))
-    (def line (.readLine inputBuffer))
-    (def message (irc-commands/parse-message line))
-    (def packet {
-                 :message message
-                 :raw line
-                 :connection connection})
-    (irc-handlers/handle packet)
-    ; TODO: threading, also sand-boxing (try/catch) funcs
-    (doseq [plugin plugins] ((:function plugin) packet))))
+    (let [line (locking inputBuffer (.readLine inputBuffer))]
+      (let [message (irc-commands/parse-message line)]
+        (let [packet {:message message :raw line :connection connection}]
+          (irc-handlers/handle packet)
+          ; TODO: plugins in some sort of wrapper
+          (doseq [plugin plugins]
+            (if (:function plugin) ((:function plugin) packet))))))))
 
 (defn bot
   [options]
