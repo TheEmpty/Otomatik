@@ -1,4 +1,4 @@
-; Rules: https://tools.ietf.org/html/rfc2812#section-2.3.1
+; IRC Rules: https://tools.ietf.org/html/rfc2812#section-2.3.1
 
 (ns rocks.empty.clojure.irc.irc-commands)
 
@@ -12,12 +12,15 @@
 
 (defn parse-user-or-server
   "Returns the nickname, realname, and/or host of a given IRC user string"
-  [line]
-  (let [results (re-find (re-matcher #"^:(.+?)(\!.+?)?(@.+?)?$" line))]
-  ; TODO: drop the ! and @ in results 2 and 3 respectively
+  [prefix]
+  (let [results (re-find (re-matcher #"^:(.+?)(\!.+?)?(@.+?)?$" prefix))]
     (if (and (= nil (nth results 2)) (= nil (nth results 3)))
       {:server (nth results 1)}
-      {:nickname (nth results 1) :realname (nth results 2) :host (nth results 3)})))
+      {
+        :nickname (nth results 1)
+        :realname (subs (nth results 2) 1)
+        :host (subs (nth results 3) 1)
+      })))
 
 (defn parse-params [params]
   "Parses the parameter part of an IRC message"
