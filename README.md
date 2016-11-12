@@ -25,31 +25,28 @@ and additional keys mapped to a function for given cases (see below).
 
 ```clojure
 {
-  :author => "How to get ahold of me."
-  :init => (fn [connection]) ; called when the bot connects to the server.
-  :handle => (fn [packet]) ; called when a message is recieved from the server.
+  :author "How to get ahold of me."
+  :init (fn [connection] (my-init connection)) ; called when the bot connects to the server.
+  :handle (fn [packet] (my-handle packet)) ; called when a message is recieved from the server.
 }
 ```
 
-The packet and connection look like this,
+The packet and connection have the following keys.
 
 ```clojure
-packet =>
-{
+packet {
   :raw ; the raw line read from the server.
   :message
   :connection
 }
 
-message =>
-{
+message {
   :prefix  ; the IRC prefix, {:server} or {:nickname :realname :host}.
   :command ; the IRC command
   :params  ; parameters to the IRC command.
 }
 
-connection => ; NOTE: use (locking obj) whenever you using these!
-{
+connection { ; NOTE: use (locking obj) whenever you using these!
   :reader ; java.io.BufferedReader
   :writer ; java.io.BufferedWritter
   :socket ; java.net.Socket
