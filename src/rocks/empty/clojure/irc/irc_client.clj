@@ -15,7 +15,7 @@
     [
      port (if (string? (:port options)) (java.lang.Long/parseLong (:port options)) (long (:port options)))
      server (str (:server options))
-     ssl (get options :ssl false)
+     ssl (get options :ssl)
      ]
 
     (if (= ssl true)
