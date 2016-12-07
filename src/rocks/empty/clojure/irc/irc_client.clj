@@ -1,5 +1,6 @@
 (ns rocks.empty.clojure.irc.irc-client
     (:import java.net.Socket)
+    (:import javax.net.ssl.SSLSocketFactory)
     (:import java.io.BufferedWriter)
     (:import java.io.BufferedReader)
     (:import java.io.InputStreamReader)
@@ -7,6 +8,19 @@
     (:require [rocks.empty.clojure.irc.irc-commands :as irc-commands])
     (:require [rocks.empty.clojure.irc.irc-handlers :as irc-handlers])
   )
+
+(defn create-socket
+  [options]
+  (let
+    [
+     port (if (string? (:port options)) (java.lang.Long/parseLong (:port options)) (long (:port options)))
+     server (str (:server options))
+     ssl (get options :ssl false)
+     ]
+
+    (if (= ssl true)
+      (.createSocket (SSLSocketFactory/getDefault) server port)
+      (new Socket server port))))
 
 (defn connect
   "Returns a connection map to the IRC server"
@@ -16,7 +30,7 @@
     [
       server (:server options)
       port (:port options)
-      socket (new Socket (str server) (long port))
+      socket (create-socket options)
       outputStream (new OutputStreamWriter (.getOutputStream socket))
       outputBuffer (new BufferedWriter outputStream)
       inputStream (new InputStreamReader (.getInputStream socket))
