@@ -2,13 +2,40 @@
 
 (ns rocks.empty.clojure.irc.irc-commands)
 
-; TODO: rename, work a bit better with options, prefix, etc.
-; Maybe move out of this file and into a more client friendly one
 (defn irc-command
+  "Deprecated, please use 'write'."
   [writer, & args]
   (locking writer
     (.write writer (str (clojure.string/join " " args) "\r\n"))
     (.flush writer)))
+
+(defn build-options-string
+  [options]
+  (if (some #(.contains %1 " ") (butlast options))
+    nil
+    (clojure.string/join " " (concat (butlast options) [(str ":" (last options))]))))
+
+(defn build-message
+  "Builds a string for the given command and options."
+  [data]
+  (let [
+        ; TODO: prefix (build-irc-string (:prefix data))
+        command (:command data)
+        options (build-options-string (:options data))
+        ]
+    (if (= nil command)
+      nil
+      (clojure.string/join " " (remove nil? (list command options))))))
+
+(defn write
+  "Builds and writes an IRC command to the server. First option should
+  be the writer and the second options a map that is passed into build-message."
+  [writer, data]
+  (let [message (build-message data)]
+    (if-not (= message nil)
+      (locking writer
+        (.write writer (str message "\r\n"))
+        (.flush writer)))))
 
 (defn parse-user-or-server
   "Returns the nickname, realname, and/or host of a given IRC user string"
