@@ -30,9 +30,9 @@
 (defn write
   "Builds and writes an IRC command to the server. First option should
   be the writer and the second options a map that is passed into build-message."
-  [writer, data]
+  [writer data]
   (let [message (build-message data)]
-    (if-not (= message nil)
+    (when-not (= message nil)
       (locking writer
         (.write writer (str message "\r\n"))
         (.flush writer)))))
