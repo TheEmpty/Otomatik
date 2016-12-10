@@ -10,6 +10,7 @@
   )
 
 (defn create-socket
+  "Creates the socket used to communicate with the server. Given server, port, and optional ssl flag."
   [options]
   (let
     [
@@ -28,20 +29,16 @@
 
   (let
     [
-      server (:server options)
-      port (:port options)
       socket (create-socket options)
-      outputStream (new OutputStreamWriter (.getOutputStream socket))
-      outputBuffer (new BufferedWriter outputStream)
-      inputStream (new InputStreamReader (.getInputStream socket))
-      inputBuffer (new BufferedReader inputStream)
+      outputBuffer (new BufferedWriter (new OutputStreamWriter (.getOutputStream socket)))
+      inputBuffer (new BufferedReader (new InputStreamReader (.getInputStream socket)))
       nickname (ref (:nickname options))
     ]
 
     (irc-commands/irc-command outputBuffer "NICK" (:nickname options))
     (irc-commands/irc-command outputBuffer "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks")
 
-    ; Calls init on plugins that define it
+    ; Calls init on plugins that define it - TODO: timeouts.
     (let [connection {:reader inputBuffer :writer outputBuffer :socket socket :nickname nickname}]
       (doseq [plugin (:plugins options)]
         (if (:init plugin)
@@ -50,6 +47,8 @@
 
 (defn main-loop
   [connection, plugins, pool]
+  ; TODO: This loop doesn't exit when the connection is closed
+  ; if it's still waiting for a line
   (while (not (.isClosed (:socket connection)))
     (let [
       inputBuffer (:reader connection)
@@ -59,13 +58,13 @@
       ]
       (irc-handlers/handle packet)
       (doseq [plugin plugins]
-        (if (:function plugin)
+        (if (:function plugin) ; TODO: timeouts.
           (.submit pool (fn [] ((:function plugin) packet))))))))
 
 (defn bot
   [options]
   (let [
-    pool (java.util.concurrent.Executors/newFixedThreadPool 16)
+    pool (java.util.concurrent.Executors/newFixedThreadPool 16) ; TODO: thread pool should be cofigurable
     connection (connect options pool)
     ]
     (main-loop connection (:plugins options) pool)
