@@ -1,5 +1,5 @@
-(ns rocks.empty.clojure.irc.default-plugins.channel-joiner
-  (:require [rocks.empty.clojure.irc.irc-commands :as irc-commands]))
+(ns rocks.empty.otomatik.default-plugins.channel-joiner
+  (:require [rocks.empty.otomatik.irc-commands :as irc-commands]))
 
 (defn joinChans
   [channels]

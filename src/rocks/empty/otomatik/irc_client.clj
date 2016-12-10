@@ -1,12 +1,12 @@
-(ns rocks.empty.clojure.irc.irc-client
+(ns rocks.empty.otomatik.irc-client
     (:import java.net.Socket)
     (:import javax.net.ssl.SSLSocketFactory)
     (:import java.io.BufferedWriter)
     (:import java.io.BufferedReader)
     (:import java.io.InputStreamReader)
     (:import java.io.OutputStreamWriter)
-    (:require [rocks.empty.clojure.irc.irc-commands :as irc-commands])
-    (:require [rocks.empty.clojure.irc.irc-handlers :as irc-handlers])
+    (:require [rocks.empty.otomatik.irc-commands :as irc-commands])
+    (:require [rocks.empty.otomatik.irc-handlers :as irc-handlers])
   )
 
 (defn run-with-timeout

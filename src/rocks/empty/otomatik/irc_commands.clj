@@ -1,6 +1,6 @@
 ; IRC Rules: https://tools.ietf.org/html/rfc2812#section-2.3.1
 
-(ns rocks.empty.clojure.irc.irc-commands)
+(ns rocks.empty.otomatik.irc-commands)
 
 (defn irc-command
   "Deprecated, please use 'write'."

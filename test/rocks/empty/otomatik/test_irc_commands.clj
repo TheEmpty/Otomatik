@@ -1,5 +1,5 @@
-(ns rocks.empty.clojure.irc.test-irc-commands
-  (:use [rocks.empty.clojure.irc.irc-commands]
+(ns rocks.empty.otomatik.test-irc-commands
+  (:use [rocks.empty.otomatik.irc-commands]
            [clojure.test]))
 
 (deftest test-build-options

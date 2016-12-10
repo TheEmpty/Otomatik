@@ -1,7 +1,7 @@
 ; These are internal "plugins" to support required IRC commands and responses.
 
-(ns rocks.empty.clojure.irc.irc-handlers
-	(:require [rocks.empty.clojure.irc.irc-commands :as irc-commands]))
+(ns rocks.empty.otomatik.irc-handlers
+	(:require [rocks.empty.otomatik.irc-commands :as irc-commands]))
 
 (defn close-connection [packet]
   (.println System/err (str "Closing connection due to " (:raw packet)))
