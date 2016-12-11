@@ -1,7 +1,10 @@
 ; These are internal "plugins" to support required IRC commands and responses.
 
 (ns rocks.empty.otomatik.irc-handlers
-	(:require [rocks.empty.otomatik.irc-commands :as irc-commands]))
+  (:require [rocks.empty.otomatik.irc-commands :as irc-commands])
+  (:require [clojure.core.async
+               :as a
+               :refer [>! <! >!! <!! go chan buffer close! thread alts! alts!! timeout]]))
 
 (defn close-connection [packet]
   ; NOTE: this should be warn level
@@ -23,10 +26,10 @@
   "This is sent by the IRC server to verify the client is still up and running."
   (let
     [
-      params (:params packet)
+      params (:params (:message packet))
       last-param (nth params (- 1 (count params)))
     ]
-    (irc-commands/irc-command (:writer (:connection packet)) "PONG" last-param)))
+    (>!! (:out packet) (str "PONG " last-param))))
 
 (defmethod handle "ERROR" [packet]
   "This is sent by the server indicating a fatal issue."
@@ -42,7 +45,7 @@
     prev-nick (first (:prefix (:message packet)))
     new-nick (last (:params (:message packet)))
     ]
-    (if (= prev-nick (deref (:nickname (:connection packet))))
+    (if (= prev-nick @(:nickname (:connection packet)))
       (dosync (ref-set (:nickname (:connection packet)) new-nick)))))
 
 ; NO-OP for unknown commands
