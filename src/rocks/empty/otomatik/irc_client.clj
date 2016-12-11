@@ -9,7 +9,7 @@
     (:require [rocks.empty.otomatik.irc-handlers :as irc-handlers])
     (:require [clojure.core.async
               :as a
-              :refer [>! <! >!! <!! go chan buffer close! thread alts! alts!! timeout]])
+              :refer [>! <! >!! <!! go go-loop chan buffer close! thread alts! alts!! timeout]])
   )
 
 (defn debug "Quick/temporary until logging" [& args] (println args))
@@ -58,33 +58,36 @@
     }))
 
 (defn main-loop-consumer
-  [input-channel plugins]
-  (while true
-    (let [packet (<!! input-channel)]
+  [connection plugins]
+  (loop []
+    (when-let [packet (<!! (:in connection))]
       (debug (str "Recieved from channel: " packet))
-      (irc-handlers/handle packet)
+      (irc-handlers/handle packet connection)
       (doseq [plugin plugins]
         (if (:function plugin)
-          (go ((:function plugin) packet)))))))
+          (go ((:function plugin) packet))))
+      (recur))))
 
 (defn main-loop-provider
   [connection]
-  (go (while true
-    (let [line (.readLine (:reader connection))]
+  (go-loop []
+    (when-let [line (.readLine (:reader connection))]
       (>! (:in connection) {
         :raw line
         :out (:out connection)
         :nickname (:nickname connection)
         :message (irc-commands/parse-message line)
-      })))))
+      })
+      (recur))))
 
 (defn main-loop-writer
   [connection]
-  (go (while true
-    (let [line (<!! (:out connection))]
+  (go-loop []
+    (when-let [line (<!! (:out connection))]
       (debug "Writing " line)
       (.write (:writer connection) (str line "\r\n"))
-      (.flush (:writer connection))))))
+      (.flush (:writer connection))
+      (recur))))
 
 (defn main-loop
   [options]
@@ -92,5 +95,5 @@
     (let [connection (connect options input-channel output-channel)]
       (main-loop-provider connection)
       (main-loop-writer connection)
-      (main-loop-consumer input-channel (:plugins options)))))
+      (main-loop-consumer connection (:plugins options)))))
 
