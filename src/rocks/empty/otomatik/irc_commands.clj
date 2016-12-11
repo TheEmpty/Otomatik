@@ -34,8 +34,13 @@
   (let [message (build-message data)]
     (when-not (= message nil)
       (locking writer
+        (println (str "SENDING: " message )) ;TODO: logging
         (.write writer (str message "\r\n"))
         (.flush writer)))))
+
+(defn quit
+  [message connection]
+  (write (:writer connection) {:command "QUIT" :options [message]}))
 
 (defn parse-user-or-server
   "Returns the nickname, realname, and/or host of a given IRC user string"

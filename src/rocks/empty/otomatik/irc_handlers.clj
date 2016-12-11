@@ -4,11 +4,16 @@
 	(:require [rocks.empty.otomatik.irc-commands :as irc-commands]))
 
 (defn close-connection [packet]
+  ; NOTE: this should be warn level
   (.println System/err (str "Closing connection due to " (:raw packet)))
   (let [connection (:connection packet)]
-    (locking (:reader connection) (.close (:reader connection)))
-    (locking (:writer connection) (.close (:writer connection)))
-    (locking (:socket connection) (.close (:socket connection)))))
+    ; Close dem channels too
+    ; NOTE: this currently doesn't work the best, can cause JVM to quit.
+    (.shutdownInput (:socket connection))
+    (.shutdownOutput (:socket connection))
+    (.close (:socket connection))
+    (.close (:reader connection))
+    (.close (:writer connection))))
 
 (defmulti handle
   "Handles IRC commands based on the given IRC command"
