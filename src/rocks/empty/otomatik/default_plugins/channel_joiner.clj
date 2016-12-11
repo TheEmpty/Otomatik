@@ -1,15 +1,17 @@
 (ns rocks.empty.otomatik.default-plugins.channel-joiner
-  (:require [rocks.empty.otomatik.irc-commands :as irc-commands]))
+  (:require [clojure.core.async
+             :as a
+             :refer [>! <! >!! <!! go chan buffer close! thread alts! alts!! timeout]]))
 
 (defn joinChans
-  [channels]
-  (fn [connection]
-    (doseq [chan channels] (irc-commands/irc-command (:writer connection) "JOIN" chan))
+  [irc-channels]
+  (fn [args]
+    (doseq [irc-chan irc-channels] (>!! (:out args) (str "JOIN " irc-chan)))
   ))
 
 (defn registration
-  [channels]
+  [irc-channels]
   {
     :author "@the_empty on GitHub"
-    :init (joinChans channels)
+    :init (joinChans irc-channels)
   })

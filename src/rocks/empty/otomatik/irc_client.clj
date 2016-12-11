@@ -14,23 +14,6 @@
 
 (defn debug "Quick/temporary until logging" [& args] (println args))
 
-; TODO: this won't be needed anymore
-(defn run-with-timeout
-  "Runs a function, for no longer than the given time in ms."
-  [timeout-ms function]
-  (let [future-body (future (function))]
-    (let [future-value (deref future-body timeout-ms :timeout)]
-      (debug (str function " " (if realized? (str "realized with " future-value) "failed to realize.")))
-      (if (realized? future-body) future-value (do (future-cancel future-body) nil)))))
-
-; TODO: this won't be needed anymore
-(defn submit-plugin
-  "Helper function, submits plugin's function with timeout to the given pool."
-  [pool plugin action argument]
-  (.submit pool (fn [] (run-with-timeout
-                  (get plugin (keyword (str action "-timeout")) 2000)
-                  (fn [] (((keyword action) plugin) argument))))))
-
 (defn create-socket
   "Creates the socket used to communicate with the server. Given server, port, and optional ssl flag."
   [options]
@@ -47,7 +30,7 @@
 
 (defn connect
   "Returns a connection map to the IRC server"
-  [options]
+  [options input-channel output-channel]
 
   (let
     [
@@ -59,46 +42,55 @@
 
     (irc-commands/irc-command outputBuffer "NICK" (:nickname options))
     (irc-commands/irc-command outputBuffer "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks")
-    {:reader inputBuffer :writer outputBuffer :socket socket :nickname nickname}))
 
     ; Calls init on plugins that define it.
-    ; TODO: convert to channels
-    ;(let [connection {:reader inputBuffer :writer outputBuffer :socket socket :nickname nickname}]
-     ; (doseq [plugin (:plugins options)] (if (:init plugin) (submit-plugin pool plugin "init" connection)))
-      ;connection)))
+    (doseq [plugin (:plugins options)]
+      (if (:init plugin)
+        (go ((:init plugin) {:out output-channel :nickname nickname}))))
 
-; TODO: move to writer streams too
+    {
+     :in input-channel
+     :out output-channel
+     :reader inputBuffer
+     :writer outputBuffer
+     :socket socket
+     :nickname nickname
+    }))
+
 (defn main-loop-consumer
-  [channel plugins]
+  [input-channel plugins]
   (while true
-    (let [packet (<!! channel)]
+    (let [packet (<!! input-channel)]
       (debug (str "Recieved from channel: " packet))
       (irc-handlers/handle packet)
       (doseq [plugin plugins]
         (if (:function plugin)
           (go ((:function plugin) packet)))))))
-      ; TODO: call plugins (then they'll write to the stream)
 
 (defn main-loop-provider
-  [connection channel]
+  [connection]
   (go (while true
     (let [line (.readLine (:reader connection))]
-      (>! channel {
+      (>! (:in connection) {
         :raw line
-        :connection connection
+        :out (:out connection)
+        :nickname (:nickname connection)
         :message (irc-commands/parse-message line)
       })))))
 
-(defn main-loop
-  [connection plugins]
-  (let [input-channel (chan)]
-    (main-loop-provider connection input-channel)
-    (main-loop-consumer input-channel plugins)))
+(defn main-loop-writer
+  [connection]
+  (go (while true
+    (let [line (<!! (:out connection))]
+      (debug "Writing " line)
+      (.write (:writer connection) (str line "\r\n"))
+      (.flush (:writer connection))))))
 
-; TODO: this should probably be in it's own file so it's not exposing all the extra stuff.
-(defn bot
+(defn main-loop
   [options]
-  (let [
-    connection (connect options)
-    ]
-    (main-loop connection (:plugins options))))
+  (let [input-channel (chan) output-channel (chan)]
+    (let [connection (connect options input-channel output-channel)]
+      (main-loop-provider connection)
+      (main-loop-writer connection)
+      (main-loop-consumer input-channel (:plugins options)))))
+
