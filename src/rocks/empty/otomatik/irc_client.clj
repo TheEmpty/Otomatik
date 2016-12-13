@@ -53,7 +53,7 @@
     ; Calls init on plugins that define it.
     (doseq [plugin (:plugins options)]
       (if (:init plugin)
-        (go ((:init plugin) {:out output-channel :nickname nickname}))))
+        (go (write-plugin-result output-channel ((:init plugin) {:nickname nickname})))))
 
     {
      :in input-channel
@@ -72,7 +72,9 @@
       (irc-handlers/handle packet connection)
       (doseq [plugin plugins]
         (if (:function plugin)
-          (go ((:function plugin) packet))))
+          (go (write-plugin-result
+            (:out connection)
+            ((:function plugin) packet)))))
       (recur))))
 
 (defn main-loop-provider
@@ -81,7 +83,6 @@
     (when-let [line (.readLine (:reader connection))]
       (>! (:in connection) {
         :raw line
-        :out (:out connection)
         :nickname (:nickname connection)
         :message (irc-commands/parse-message line)
       })
