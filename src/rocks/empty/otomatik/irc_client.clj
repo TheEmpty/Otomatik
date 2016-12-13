@@ -83,7 +83,7 @@
     (when-let [line (.readLine (:reader connection))]
       (>! (:in connection) {
         :raw line
-        :nickname (:nickname connection)
+        :nickname @(:nickname connection)
         :message (irc-commands/parse-message line)
       })
       (recur))))
