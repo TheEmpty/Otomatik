@@ -28,6 +28,13 @@
       (.createSocket (SSLSocketFactory/getDefault) server port)
       (new Socket server port))))
 
+(defn write-plugin-result
+  [output-channel result]
+  (when-not (= nil result)
+    (if (string? result)
+      (go (>! output-channel (str result)))
+      (doseq [line result] (go (>! output-channel (str line)))))))
+
 (defn connect
   "Returns a connection map to the IRC server"
   [options input-channel output-channel]
