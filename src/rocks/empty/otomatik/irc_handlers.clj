@@ -24,7 +24,7 @@
       params (:params (:message packet))
       last-param (nth params (- 1 (count params)))
     ]
-    (>!! (:out packet) (str "PONG " last-param))))
+    (>!! (:out connection) (str "PONG " last-param))))
 
 (defmethod handle "ERROR" [packet connection]
   "This is sent by the server indicating a fatal issue."
@@ -40,8 +40,8 @@
     prev-nick (first (:prefix (:message packet)))
     new-nick (last (:params (:message packet)))
     ]
-    (if (= prev-nick @(:nickname packet))
-      (dosync (ref-set (:nickname packet) new-nick)))))
+    (if (= prev-nick @(:nickname connection))
+      (dosync (ref-set (:nickname connection) new-nick)))))
 
 ; NO-OP for unknown commands
 (defmethod handle :default [packet connection] nil)
