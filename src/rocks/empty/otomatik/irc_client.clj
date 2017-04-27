@@ -40,55 +40,35 @@
       (go (>! output-channel (str result)))
       (doseq [line result] (go (>! output-channel (str line)))))))
 
-(defn connect
-  "Returns a connection map to the IRC server"
-  [options input-channel output-channel]
-
-  (let
-    [
-      socket (create-socket options)
-      outputBuffer (new BufferedWriter (new OutputStreamWriter (.getOutputStream socket)))
-      inputBuffer (new BufferedReader (new InputStreamReader (.getInputStream socket)))
-      nickname (ref (:nickname options))
-    ]
-
-    (log/debug "Registering NICK and USER")
-    (irc-commands/irc-command outputBuffer "NICK" (:nickname options))
-    (irc-commands/irc-command outputBuffer "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks")
-
-    {
-     :in input-channel
-     :out output-channel
-     :reader inputBuffer
-     :writer outputBuffer
-     :socket socket
-     :nickname nickname
-    }))
-
 (defn init-plugins
-  "Calls init on plugins that define it."
+  "Starts plugins that define a starting method."
   [connection plugins]
   (doseq [plugin plugins]
-    (when (:init plugin)
-      (log/debug "Calling" (get plugin :name "a plugin's") ":init by" (get plugin :author "an uknown author."))
-
-      ; Since I'm currently the only consumer, I'll probably refactor out the old version later
-      (if (>= 0.2 (get plugin :otomatik_version 0))
-        ((:init plugin) (plugin-writer/create (:out connection)))
-        (go (write-plugin-result (:out connection)
-          ((:init plugin) {:nickname (:nickname connection)})))))))
+    (if (>= 0.2 (get plugin :otomatik_version 0))
+      (when (:on-connect plugin)
+        (log/debug "Calling" (get plugin :name "a plugin's") ":on-connect by" (get plugin :author "an uknown author."))
+        ((:on-connect plugin) (channel-wrapper/create (:out connection))))
+      (when (:init plugin)
+        (log/debug "Calling" (get plugin :name "a plugin's") ":init by" (get plugin :author "an uknown author."))
+        (if (>= 0.2 (get plugin :otomatik_version 0))
+          ((:on-connect plugin) (channel-wrapper/create (:out connection)))
+          (go (write-plugin-result (:out connection)
+            ((:init plugin) {:nickname (:nickname connection)}))))))))
 
 (defn main-loop-consumer
   [connection plugins]
   (loop []
     (when-let [packet (<!! (:in connection))]
-      (log/trace "Recieved from channel:" packet)
+      (log/trace "Recieved from :in channel:" packet)
       (irc-handlers/handle packet connection)
       (doseq [plugin plugins]
-        (if (:function plugin)
-          (go (write-plugin-result
-            (:out connection)
-            ((:function plugin) packet)))))
+        (if (>= 0.2 (get plugin :otomatik_version 0))
+          (if (:on-message-recieved plugin)
+            ((:on-message-recieved plugin) (channel-wrapper/create (:out connection)) packet) 
+          (if (:function plugin)
+            (go (write-plugin-result
+              (:out connection)
+              ((:function plugin) packet)))))))
       (recur))))
 
 (defn start-in-provider
