@@ -16,6 +16,9 @@
     nil
     (clojure.string/join " " (concat (butlast options) [(str ":" (last options))]))))
 
+; TODO: should things like this be moved to a different library?
+; they're not quite part of the framework and could lead to some
+; odd/off dependency graphs, bot -> plugin -> Otomatik, bot -> Otomatik
 (defn build-message
   "Builds a string for the given command and options."
   [data]
