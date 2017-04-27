@@ -1,37 +1,15 @@
 (ns rocks.empty.otomatik.irc-client
-    (:import java.net.Socket)
-    (:import javax.net.ssl.SSLSocketFactory)
-    (:import java.io.BufferedWriter)
-    (:import java.io.BufferedReader)
-    (:import java.io.InputStreamReader)
-    (:import java.io.OutputStreamWriter)
+    (:require [rocks.empty.otomatik.connection-builder :as connection-builder])
     (:require [rocks.empty.otomatik.irc-commands :as irc-commands])
     (:require [rocks.empty.otomatik.irc-handlers :as irc-handlers])
-    (:require [rocks.empty.otomatik.channel-plugin-writer :as plugin-writer])
+    (:require [rocks.empty.otomatik.channel-wrapper :as channel-wrapper])
     (:require [clojure.tools.logging :as log])
     (:require [clojure.core.async
               :as a
               :refer [>! <! >!! <!! go go-loop chan buffer close! thread alts! alts!! timeout]])
   )
 
-(defn create-socket
-  "Creates the socket used to communicate with the server. Given server, port, and optional ssl flag."
-  [options]
-  (let
-    [
-     port (if (string? (:port options)) (Long/parseLong (:port options)) (long (:port options)))
-     server (str (:server options))
-     ssl (get options :ssl)
-     ]
-    (log/debugf "Trying to connect to %s:%s with ssl = %s" server port (= true ssl))
-
-    ; there is probably a better way to do this...
-    (let
-      [
-        socket (if (= ssl true) (.createSocket (SSLSocketFactory/getDefault) server port) (new Socket server port))
-      ]
-      (log/debugf "Connected with %s" socket)
-      socket)))
+; TODO: also pull out plugins
 
 (defn write-plugin-result
   [output-channel result]
@@ -87,15 +65,22 @@
   [connection]
   (go-loop []
     (when-let [line (<!! (:out connection))]
-      (log/trace "Writing" line)
+      (log/trace "Writing to socket" line)
       (.write (:writer connection) (str line "\r\n"))
       (.flush (:writer connection))
       (recur))))
 
+(defn init-connection
+  [connection options]
+    (log/debug "Registering NICK and USER")
+    (irc-commands/irc-command (:writer connection) "NICK" (:nickname options))
+    (irc-commands/irc-command (:writer connection) "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks"))
+
 (defn main-loop
   [options]
   (let [input-channel (chan) output-channel (chan)]
-    (let [connection (connect options input-channel output-channel)]
+    (let [connection (connection-builder/create options input-channel output-channel)]
+      (init-connection connection options)
       (init-plugins connection (:plugins options))
       (log/trace "Starting up threads.")
       (start-in-provider connection)

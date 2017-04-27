@@ -1,4 +1,4 @@
-(ns rocks.empty.otomatik.channel-plugin-writer
+(ns rocks.empty.otomatik.channel-wrapper
   (:require [clojure.tools.logging :as log])
   (:require [clojure.core.async :as a :refer [go >!]]))
 
