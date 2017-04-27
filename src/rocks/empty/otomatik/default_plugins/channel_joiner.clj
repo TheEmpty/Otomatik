@@ -5,7 +5,8 @@
   [irc-channels]
   {
     :author "@the_empty on GitHub"
-    :init (fn [args]
+    :otomatik_version 0.2
+    :init (fn [write-fn]
       (log/debug "Joining " irc-channels)
-      (map #(str "JOIN " %1) irc-channels))
+      (doall (map #(write-fn (str "JOIN " %1)) irc-channels)))
   })

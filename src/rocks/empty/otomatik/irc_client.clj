@@ -7,6 +7,7 @@
     (:import java.io.OutputStreamWriter)
     (:require [rocks.empty.otomatik.irc-commands :as irc-commands])
     (:require [rocks.empty.otomatik.irc-handlers :as irc-handlers])
+    (:require [rocks.empty.otomatik.channel-plugin-writer :as plugin-writer])
     (:require [clojure.tools.logging :as log])
     (:require [clojure.core.async
               :as a
@@ -69,9 +70,13 @@
   [connection plugins]
   (doseq [plugin plugins]
     (when (:init plugin)
-      (log/debug "Calling a plugin's :init by" (get plugin :author))
-      (go (write-plugin-result (:out connection)
-        ((:init plugin) {:nickname (:nickname connection)}))))))
+      (log/debug "Calling" (get plugin :name "a plugin's") ":init by" (get plugin :author "an uknown author."))
+
+      ; Since I'm currently the only consumer, I'll probably refactor out the old version later
+      (if (>= 0.2 (get plugin :otomatik_version 0))
+        ((:init plugin) (plugin-writer/create (:out connection)))
+        (go (write-plugin-result (:out connection)
+          ((:init plugin) {:nickname (:nickname connection)})))))))
 
 (defn main-loop-consumer
   [connection plugins]
