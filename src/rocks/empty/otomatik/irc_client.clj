@@ -7,12 +7,11 @@
     (:import java.io.OutputStreamWriter)
     (:require [rocks.empty.otomatik.irc-commands :as irc-commands])
     (:require [rocks.empty.otomatik.irc-handlers :as irc-handlers])
+    (:require [clojure.tools.logging :as log])
     (:require [clojure.core.async
               :as a
               :refer [>! <! >!! <!! go go-loop chan buffer close! thread alts! alts!! timeout]])
   )
-
-(defn debug "Quick/temporary until logging" [& args] (println args))
 
 (defn create-socket
   "Creates the socket used to communicate with the server. Given server, port, and optional ssl flag."
@@ -23,6 +22,7 @@
      server (str (:server options))
      ssl (get options :ssl)
      ]
+    (log/debugf "Trying to connect to %s:%s with ssl = %s" server port (= true ssl))
 
     (if (= ssl true)
       (.createSocket (SSLSocketFactory/getDefault) server port)
@@ -68,7 +68,7 @@
   [connection plugins]
   (loop []
     (when-let [packet (<!! (:in connection))]
-      (debug (str "Recieved from channel: " packet))
+      (log/trace "Recieved from channel: " packet)
       (irc-handlers/handle packet connection)
       (doseq [plugin plugins]
         (if (:function plugin)
@@ -92,7 +92,7 @@
   [connection]
   (go-loop []
     (when-let [line (<!! (:out connection))]
-      (debug "Writing " line)
+      (log/trace "Writing " line)
       (.write (:writer connection) (str line "\r\n"))
       (.flush (:writer connection))
       (recur))))

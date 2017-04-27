@@ -1,6 +1,7 @@
 ; IRC Rules: https://tools.ietf.org/html/rfc2812#section-2.3.1
 
-(ns rocks.empty.otomatik.irc-commands)
+(ns rocks.empty.otomatik.irc-commands
+    (:require [clojure.tools.logging :as log]))
 
 (defn irc-command
   "Deprecated, please use 'write'."
@@ -34,7 +35,7 @@
   (let [message (build-message data)]
     (when-not (= message nil)
       (locking writer
-        (println (str "SENDING: " message )) ;TODO: logging
+        (log/trace "SENDING: " message)
         (.write writer (str message "\r\n"))
         (.flush writer)))))
 

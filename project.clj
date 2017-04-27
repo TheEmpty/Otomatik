@@ -6,6 +6,7 @@
   :dependencies [
     [org.clojure/clojure "1.8.0"]
     [org.clojure/core.async "0.2.395"]
+    [org.clojure/tools.logging "0.3.1"]
   ]
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

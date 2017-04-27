@@ -1,12 +1,12 @@
 (ns rocks.empty.otomatik.irc-handlers
   (:require [rocks.empty.otomatik.irc-commands :as irc-commands])
+  (:require [clojure.tools.logging :as log])
   (:require [clojure.core.async
                :as a
                :refer [>! <! >!! <!! go chan buffer close! thread alts! alts!! timeout]]))
 
 (defn close-connection [packet connection]
-  ; NOTE: this should be warn level
-  (.println System/err (str "Closing connection due to " (:raw packet)))
+  (log/fatal "Closing connection due to " (:raw packet))
   (close! (:out connection))
   (close! (:in connection))
   (.close (:socket connection))
