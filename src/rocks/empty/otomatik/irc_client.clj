@@ -4,9 +4,7 @@
     (:require [rocks.empty.otomatik.irc-handlers :as irc-handlers])
     (:require [rocks.empty.otomatik.plugin-helper :as plugin-helper])
     (:require [clojure.tools.logging :as log])
-    (:require [clojure.core.async
-              :as a
-              :refer [>! <!! go go-loop chan]])
+    (:require [clojure.core.async :as a :refer [>! <!! go go-loop chan]])
   )
 
 (defn write-plugin-result

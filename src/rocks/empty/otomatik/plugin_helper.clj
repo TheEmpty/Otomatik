@@ -1,9 +1,7 @@
 (ns rocks.empty.otomatik.plugin-helper
     (:require [clojure.tools.logging :as log])
     (:require [rocks.empty.otomatik.channel-wrapper :as channel-wrapper])
-    (:require [clojure.core.async
-              :as a
-              :refer [>! go]]))
+    (:require [clojure.core.async :as a :refer [>! go]]))
 
 (defn write-plugin-result
   "Used for non-versioned plugins"

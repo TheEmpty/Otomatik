@@ -19,4 +19,4 @@ An IRC bot in Clojure. To hopefully be modular and plugin-based.
 
 Copyright © 2016-2017 Mohammad "Empty" El-Abid
 
-Distributed under the Eclipse Public License either version 1.0.
+Distributed under the MIT License.
