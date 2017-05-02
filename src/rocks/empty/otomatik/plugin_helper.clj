@@ -10,14 +10,10 @@
     (catch Exception e# (log/warn e#))))
 
 (defn build-state-map
-  [connection]
-  {
-    :nickname (:nickname connection) ; Available since: forever
-    ; Other useful things / TODO
-    ; channels => who is there (with what level)
-    ; ex:
-    ; {:#otomatik [{:nickname 'bot' :mode 'v'} {:nickname 'CoolDude' :mode 'op'}]}
-  })
+  [connection state]
+  (merge
+    state
+    {:nickname (:nickname connection)}))
 
 (defn write-plugin-result
   "Used for non-versioned plugins"
@@ -33,24 +29,24 @@
 
 (defn init-plugins
   "Starts plugins that define a starting method."
-  [connection plugins]
+  [connection plugins state]
   (doseq [plugin plugins]
     (if (= 0.2 (get plugin :otomatik_version 0))
       (when (:on-connect plugin)
         (log/debug "Calling" (get plugin :name "a plugin's") ":on-connect by" (get plugin :author "an uknown author."))
         (idgaf
-          ((:on-connect plugin) (channel-wrapper/create (:out connection)) (build-state-map connection))))
+          ((:on-connect plugin) (channel-wrapper/create (:out connection)) (build-state-map connection state))))
       (when (:init plugin)
         (log/debug "Calling" (get plugin :name "a plugin's") ":init by" (get plugin :author "an uknown author."))
         (idgaf (write-plugin-result (:out connection)
             ((:init plugin) (build-state-map connection))))))))
 
 (defn message-recieved
-  [connection plugins packet]
+  [connection plugins state packet]
   (doseq [plugin plugins]
     (if (= 0.2 (get plugin :otomatik_version 0))
       (if (:on-message-recieved plugin)
-        (idgaf ((:on-message-recieved plugin) (channel-wrapper/create (:out connection)) (build-message packet) (build-state-map connection))))
+        (idgaf ((:on-message-recieved plugin) (channel-wrapper/create (:out connection)) (build-message packet) (build-state-map connection state))))
       (if (:function plugin)
         (idgaf (write-plugin-result
           (:out connection)

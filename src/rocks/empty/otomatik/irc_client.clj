@@ -3,17 +3,18 @@
     (:require [rocks.empty.otomatik.irc-commands :as irc-commands])
     (:require [rocks.empty.otomatik.irc-handlers :as irc-handlers])
     (:require [rocks.empty.otomatik.plugin-helper :as plugin-helper])
+    (:require [rocks.empty.otomatik.default-plugins.channel-watcher :as channel-watcher])
     (:require [clojure.tools.logging :as log])
     (:require [clojure.core.async :as a :refer [>! <!! go go-loop chan]])
   )
 
 (defn main-loop-consumer
-  [connection plugins]
+  [connection plugins state]
   (loop []
     (when-let [packet (<!! (:in connection))]
       (log/trace "Recieved from :in channel:" packet)
       (irc-handlers/handle packet connection) ; Core handlers
-      (plugin-helper/message-recieved connection plugins packet)
+      (plugin-helper/message-recieved connection plugins state packet)
       (recur))))
 
 (defn start-in-provider
@@ -47,11 +48,17 @@
 (defn main-loop
   [options]
   (let [input-channel (chan) output-channel (chan)]
-    (let [connection (connection-builder/create options input-channel output-channel)]
+    (let [
+      channels (ref {})
+      connection (connection-builder/create options input-channel output-channel)
+      plugins (concat [(channel-watcher/registration channels)] (:plugins options))
+      state {:channels channels}
+      ]
+      (log/tracef "Plugins: %s" (vec plugins))
       (init-connection connection options)
-      (plugin-helper/init-plugins connection (:plugins options))
+      (plugin-helper/init-plugins connection plugins state)
       (log/trace "Starting up threads.")
       (start-in-provider connection)
       (start-out-consumer connection)
       (log/trace "Threads started. Starting main loop.")
-      (main-loop-consumer connection (:plugins options)))))
+      (main-loop-consumer connection plugins state))))
