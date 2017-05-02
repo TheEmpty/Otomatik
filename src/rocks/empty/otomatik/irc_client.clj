@@ -7,13 +7,6 @@
     (:require [clojure.core.async :as a :refer [>! <!! go go-loop chan]])
   )
 
-(defn write-plugin-result
-  [output-channel result]
-  (when-not (= nil result)
-    (if (string? result)
-      (go (>! output-channel (str result)))
-      (doseq [line result] (go (>! output-channel (str line)))))))
-
 (defn main-loop-consumer
   [connection plugins]
   (loop []
@@ -26,14 +19,15 @@
 (defn start-in-provider
   [connection]
   (go-loop []
-    (when-let [line (.readLine (:reader connection))]
-      (log/trace "Adding the following line to :in," line)
-      (>! (:in connection) {
-        :raw line
-        :nickname @(:nickname connection)
-        :message (irc-commands/parse-message line)
-      })
-      (recur))))
+    (when (.ready (:reader connection))
+      (let [line (.readLine (:reader connection))]
+        (log/trace "Adding the following line to :in," line)
+        (>! (:in connection) {
+          :raw line
+          :nickname @(:nickname connection)
+          :message (irc-commands/parse-message line)
+        })))
+  (recur)))
 
 (defn start-out-consumer
   [connection]
@@ -48,7 +42,7 @@
   [connection options]
     (log/debug "Registering NICK and USER")
     (irc-commands/irc-command (:writer connection) "NICK" (:nickname options))
-    (irc-commands/irc-command (:writer connection) "USER" (:realname options)  "8" "*" ":" "EmptyDotRocks"))
+    (irc-commands/irc-command (:writer connection) "USER" (:realname options)  "8" "*" ":" "Otomatik"))
 
 (defn main-loop
   [options]
