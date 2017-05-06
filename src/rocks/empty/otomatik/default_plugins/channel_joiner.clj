@@ -6,7 +6,7 @@
   {
     :name "Channel Joiner"
     :author "@theempty on GitHub"
-    :otomatik_version 0.2
+    :otomatik-version 0.2
 
     :on-connect (fn [write-fn _state]
       (log/debug "Joining " irc-channels)

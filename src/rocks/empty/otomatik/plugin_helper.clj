@@ -31,7 +31,7 @@
   "Starts plugins that define a starting method."
   [connection plugins state]
   (doseq [plugin plugins]
-    (if (= 0.2 (get plugin :otomatik_version 0))
+    (if (= 0.2 (get plugin :otomatik-version 0))
       (when (:on-connect plugin)
         (log/debug "Calling" (get plugin :name "a plugin's") ":on-connect by" (get plugin :author "an uknown author."))
         (idgaf
@@ -44,7 +44,7 @@
 (defn message-recieved
   [connection plugins state packet]
   (doseq [plugin plugins]
-    (if (= 0.2 (get plugin :otomatik_version 0))
+    (if (= 0.2 (get plugin :otomatik-version 0))
       (if (:on-message-recieved plugin)
         (idgaf ((:on-message-recieved plugin) (channel-wrapper/create (:out connection)) (build-message packet) (build-state-map connection state))))
       (if (:function plugin)

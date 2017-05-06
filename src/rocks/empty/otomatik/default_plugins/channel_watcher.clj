@@ -88,7 +88,7 @@
   {
     :name "Channel Watcher"
     :author "@theempty on GitHub"
-    :otomatik_version 0.2
+    :otomatik-version 0.2
 
     :on-message-recieved
       (fn [writer packet state]
