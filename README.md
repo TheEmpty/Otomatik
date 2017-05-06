@@ -8,7 +8,6 @@ An IRC bot in Clojure. To hopefully be modular and plugin-based.
 
 * Test suite.
 * Improve documentation.
-* Non-event driven plugins.
 * A concrete structure for plugins.
 
 ## Known Issues
